@@ -3,8 +3,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Use path.resolve to create an absolute path
-const uploadDir = path.resolve(__dirname, "../frontend/uploads");
+// Modify this to use a writable path for your environment
+const uploadDir = path.resolve(__dirname, "../uploads"); // Adjust path as needed
 console.log("Upload directory path:", uploadDir); // For debugging
 
 // Ensure the uploads directory exists
@@ -154,6 +154,7 @@ exports.getExpenseById = async (req, res) => {
   }
 };
 
+// Update Expense
 exports.updateExpense = async (req, res) => {
   try {
     let updateData = { ...req.body };
@@ -187,6 +188,7 @@ exports.updateExpense = async (req, res) => {
   }
 };
 
+// Delete Expense
 exports.deleteExpense = async (req, res) => {
   try {
     const expense = await Expense.findById(req.params.id);
@@ -196,10 +198,9 @@ exports.deleteExpense = async (req, res) => {
 
     // Delete the receipt file if it exists
     if (expense.receipt) {
-      // Use path.resolve here too for consistency
       const filePath = path.resolve(
         __dirname,
-        "../frontend/public",
+        "../public", // Change path as needed based on where the files are stored
         expense.receipt
       );
       if (fs.existsSync(filePath)) {

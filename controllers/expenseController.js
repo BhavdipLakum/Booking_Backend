@@ -3,8 +3,11 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Modify this to use a writable path for your environment
-const uploadDir = path.resolve(__dirname, "../uploads"); // Adjust path as needed
+// For local development, use a relative path to store uploaded files
+// If you're using AWS Lambda or a similar environment, use `/tmp/uploads`
+const uploadDir = path.resolve(__dirname, "../uploads"); // For local environment
+// const uploadDir = path.resolve(__dirname, "/tmp/uploads"); // Uncomment this line for AWS Lambda or similar environments
+
 console.log("Upload directory path:", uploadDir); // For debugging
 
 // Ensure the uploads directory exists
@@ -65,7 +68,6 @@ exports.getExpenses = async (req, res) => {
     const { category, search, timeframe, sortBy } = req.query;
     let filter = {};
 
-    // Filter by Category
     if (category && category !== "all") {
       filter.category = category;
     }
@@ -107,33 +109,30 @@ exports.getExpenses = async (req, res) => {
       }
     }
 
-    // Search Query (Matches description)
     if (search) {
       filter.description = { $regex: search, $options: "i" };
     }
 
-    // Sorting
     let sortOptions = {};
     if (sortBy) {
       switch (sortBy) {
         case "date":
-          sortOptions.expenseDate = -1; // Newest first
+          sortOptions.expenseDate = -1;
           break;
         case "dateAsc":
-          sortOptions.expenseDate = 1; // Oldest first
+          sortOptions.expenseDate = 1;
           break;
         case "amountDesc":
-          sortOptions.amount = -1; // Highest amount first
+          sortOptions.amount = -1;
           break;
         case "amountAsc":
-          sortOptions.amount = 1; // Lowest amount first
+          sortOptions.amount = 1;
           break;
         default:
-          sortOptions.expenseDate = -1; // Default: Newest first
+          sortOptions.expenseDate = -1;
       }
     }
 
-    // Fetch expenses with filters
     const expenses = await Expense.find(filter).sort(sortOptions);
     res.json(expenses);
   } catch (err) {
@@ -159,18 +158,15 @@ exports.updateExpense = async (req, res) => {
   try {
     let updateData = { ...req.body };
 
-    // Check if a new file is uploaded
     if (req.file) {
       updateData.receipt = `/uploads/${req.file.filename}`;
     }
 
-    // Find existing expense
     const existingExpense = await Expense.findById(req.params.id);
     if (!existingExpense) {
       return res.status(404).json({ error: "Expense not found" });
     }
 
-    // If no new file is uploaded, keep the old receipt
     if (!req.file && existingExpense.receipt) {
       updateData.receipt = existingExpense.receipt;
     }
@@ -196,20 +192,14 @@ exports.deleteExpense = async (req, res) => {
       return res.status(404).json({ error: "Expense not found" });
     }
 
-    // Delete the receipt file if it exists
     if (expense.receipt) {
-      const filePath = path.resolve(
-        __dirname,
-        "../public", // Change path as needed based on where the files are stored
-        expense.receipt
-      );
+      const filePath = path.resolve(__dirname, "../public", expense.receipt);
       if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath); // Delete file from storage
+        fs.unlinkSync(filePath);
       }
     }
 
     await Expense.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Expense deleted successfully" });
   } catch (err) {
     console.error("Error deleting expense:", err);
@@ -217,5 +207,4 @@ exports.deleteExpense = async (req, res) => {
   }
 };
 
-// Export the Multer Upload Middleware
 exports.upload = upload;

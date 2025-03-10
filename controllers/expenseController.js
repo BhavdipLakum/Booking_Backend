@@ -2,10 +2,43 @@ const Expense = require("../models/Expense");
 const multer = require("multer");
 const path = require("path");
 
+<<<<<<< HEAD
 // Configure Multer Storage (No actual file storage)
 const storage = multer.memoryStorage(); // Store files in memory (not the filesystem)
 
 const upload = multer({ storage }); // Use in-memory storage for file uploads
+=======
+// Modify this to use a writable path for your environment
+const uploadDir = path.resolve(__dirname, "../uploads"); // Adjust path as needed
+console.log("Upload directory path:", uploadDir); // For debugging
+
+// Ensure the uploads directory exists
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("Created uploads directory:", uploadDir);
+  } else {
+    console.log("Uploads directory already exists");
+  }
+} catch (error) {
+  console.error("Error creating uploads directory:", error);
+}
+
+// Configure Multer Storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log("Uploading file to:", uploadDir); // Debugging
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const filename = Date.now() + path.extname(file.originalname);
+    console.log("File saved as:", filename); // Debugging
+    cb(null, filename);
+  },
+});
+
+const upload = multer({ storage });
+>>>>>>> 34972a1e3deb7724d53987e2adf2da40ee5b9e80
 
 // Create Expense
 exports.createExpense = async (req, res) => {
@@ -171,7 +204,21 @@ exports.deleteExpense = async (req, res) => {
       return res.status(404).json({ error: "Expense not found" });
     }
 
+<<<<<<< HEAD
     // No file deletion as no file is stored on disk
+=======
+    // Delete the receipt file if it exists
+    if (expense.receipt) {
+      const filePath = path.resolve(
+        __dirname,
+        "../public", // Change path as needed based on where the files are stored
+        expense.receipt
+      );
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath); // Delete file from storage
+      }
+    }
+>>>>>>> 34972a1e3deb7724d53987e2adf2da40ee5b9e80
 
     await Expense.findByIdAndDelete(req.params.id);
 
@@ -182,5 +229,9 @@ exports.deleteExpense = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // Export the Multer Upload Middleware (Still necessary to handle file data)
+=======
+// Export the Multer Upload Middleware
+>>>>>>> 34972a1e3deb7724d53987e2adf2da40ee5b9e80
 exports.upload = upload;
